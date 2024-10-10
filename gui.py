@@ -8,6 +8,9 @@ import requests
 import configparser
 from tkinter import font as tkFont
 
+# Flag for Blinking-State
+is_blinking = False
+
 # reading configuration from ini-file
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -71,19 +74,12 @@ def log_message(message):
     log_text.insert(tk.END, f"{time.strftime('%Y-%m-%d %H:%M:%S')} - {message}\n")
     log_text.see(tk.END)
 
-# Funktion zur Formatierung der Frequenzanzeige mit "MHz"
+# funktion for formatting with "MHz"
 def format_frequency(frequency):
     if len(frequency) > 1:
         return f"{frequency[0]}.{frequency[1:]}"
     else:
-        return frequency  # Fallback falls die Frequenz zu kurz ist
-
-# Update the GUI with the current data
-def update_display(frequency, mode, power):
-    formatted_frequency = format_frequency(frequency)  # Formatiere die Frequenz für die Anzeige
-    frequency_label.config(text=formatted_frequency)
-    mode_label.config(text=mode)
-    power_bar['value'] = power
+        return frequency  # Fallback frequency too short
 
 # function to reconnect
 def reconnect():
@@ -101,6 +97,59 @@ def toggle_led():
     root.update()  # Force the GUI to update immediately
     time.sleep(0.2)  # Adjust the delay as needed
     led_label.config(bg="black")
+
+# function to check if within bandplan
+def is_within_iaru_region1(frequency):
+    # Region 1 bandplan
+    bands = [
+        (1810000, 2000000),  # 160m Band
+        (3500000, 3800000),  # 80m Band
+        (5351500, 5366500),  # 60m Band
+        (7000000, 7200000),  # 40m Band
+        (10100000, 10150000), # 30m Band
+        (14000000, 14350000), # 20m Band
+        (18068000, 18168000), # 17m Band
+        (21000000, 21450000), # 15m Band
+        (24890000, 24990000), # 12m Band
+        (28000000, 29700000), # 10m Band
+        (50000000, 52000000), # 6m Band
+        (70150000, 70250000)  # 4m Band
+    ]
+    
+    # Check if QRG in bandplan
+    for (lower, upper) in bands:
+        if lower <= int(frequency) <= upper:
+            return True
+    return False
+
+# blinking of the frequency
+def blink_frequency():
+    global is_blinking
+    if is_blinking:
+        current_color = frequency_label.cget("fg")
+        new_color = "red" if current_color == "black" else "black"
+        frequency_label.config(fg=new_color)
+        root.after(500, blink_frequency)  # Blinks every 500 ms
+
+# Update the GUI with the current data
+def update_display(frequency, mode, power):
+    global is_blinking
+    formatted_frequency = format_frequency(frequency)  # formatting QRG for output
+    frequency_label.config(text=formatted_frequency)
+    mhz_label.config(text="MHz")
+    mode_label.config(text=mode)
+    power_bar['value'] = power
+
+    # check, if QRG is within Region 1 bandplan
+    if is_within_iaru_region1(frequency):
+        # if in - stop blinking
+        is_blinking = False
+        frequency_label.config(fg="red")
+    else:
+        # if out - start blinking
+        if not is_blinking:
+            is_blinking = True
+            blink_frequency()
 
 # Main-function for fetching the data
 def main_loop():
