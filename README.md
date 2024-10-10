@@ -8,3 +8,5 @@ Python client to connect a transceiver via rigctl (hamlib) to Wavelog to transfe
 This is a little tiny GUI-Client that connects via rigctl-protocol to your transceiver, reads the actual frequency, mode and power and pushes it via the radio-API to your Wavelog or Cloudlog-logbook.
 
 All you need for have it running is the correct API-endpoint and, for sure, your API-key configured in the ini-file.
+
+Under Linux you should also install sox with sudo apt-get install sox.

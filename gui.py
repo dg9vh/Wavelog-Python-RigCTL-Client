@@ -8,6 +8,13 @@ import requests
 import configparser
 from tkinter import font as tkFont
 
+import platform
+# depending on OS import corresponding lib
+if platform.system() == "Windows":
+    import winsound
+else:
+    import os
+
 # Flag for Blinking-State
 is_blinking = False
 
@@ -123,13 +130,25 @@ def is_within_iaru_region1(frequency):
             return True
     return False
 
+# function for creating the tone
+def play_beep():
+    if platform.system() == "Windows":
+        winsound.Beep(1000, 200)  # Frequency 1000 Hz, duration 200 ms
+    else:
+        # on Linux/MacOS we use the 'play'-command
+        os.system('play -nq -t alsa synth 0.2 sine 1000')  # Frequency 1000 Hz, duration 200 ms
+
 # blinking of the frequency
 def blink_frequency():
     global is_blinking
     if is_blinking:
         current_color = frequency_label.cget("fg")
         new_color = "red" if current_color == "black" else "black"
-        frequency_label.config(fg=new_color)
+        frequency_label.config(fg=new_color)        
+        
+        # play the beep
+        play_beep()
+        
         root.after(500, blink_frequency)  # Blinks every 500 ms
 
 # Update the GUI with the current data
