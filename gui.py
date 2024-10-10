@@ -76,10 +76,11 @@ def log_message(message):
 
 # funktion for formatting with "MHz"
 def format_frequency(frequency):
-    if len(frequency) > 1:
+    if int(frequency) < 10000000:
         return f"{frequency[0]}.{frequency[1:]}"
     else:
-        return frequency  # Fallback frequency too short
+        return f"{frequency[0:2]}.{frequency[2:]}"
+
 
 # function to reconnect
 def reconnect():
