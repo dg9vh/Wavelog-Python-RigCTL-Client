@@ -15,6 +15,9 @@ if platform.system() == "Windows":
 else:
     import os
 
+# Volume
+volume_level = 50
+
 # Flag for Blinking-State
 is_blinking = False
 
@@ -136,7 +139,8 @@ def play_beep():
         winsound.Beep(1000, 200)  # Frequency 1000 Hz, duration 200 ms
     else:
         # on Linux/MacOS we use the 'play'-command
-        os.system('play -nq -t alsa synth 0.2 sine 1000')  # Frequency 1000 Hz, duration 200 ms
+        gain = (volume_level - 100) / 5  # set gain from -20 dB to 0 dB
+        os.system(f'play -nq -t alsa synth 0.2 sine 1000 gain {gain}')  # Frequency 1000 Hz, duration 200 ms
 
 # blinking of the frequency
 def blink_frequency():
@@ -150,6 +154,12 @@ def blink_frequency():
         play_beep()
         
         root.after(500, blink_frequency)  # Blinks every 500 ms
+
+# Update the volume
+def update_volume(val):
+    global volume_level
+    volume_level = float(val)  # set value to slider-level, allowing decimal points
+
 
 # Update the GUI with the current data
 def update_display(frequency, mode, power):
@@ -222,7 +232,7 @@ def main_loop():
 # Setup GUI
 root = tk.Tk()
 root.title("Wavelog Client")
-root.geometry("500x380")
+root.geometry("500x420")
 
 # Lade und verwende die 7-Segment Schriftart für die Frequenz
 seven_seg_font = tkFont.Font(family="DSEG7 Classic", size=40)  # Passe hier den Namen der installierten Schriftart an
@@ -249,6 +259,18 @@ power_bar.pack(pady=10)
 # Log Text Area
 log_text = tk.Text(root, height=10, wrap=tk.WORD)
 log_text.pack(fill=tk.BOTH, expand=True)
+
+
+# Label and slider for volume-control
+volume_frame = tk.Frame(root)
+volume_label = tk.Label(volume_frame, text="Volume:")
+volume_label.pack(side=tk.LEFT)
+
+volume_slider = ttk.Scale(volume_frame, from_=0, to=100, orient=tk.HORIZONTAL, command=update_volume)
+volume_slider.set(volume_level)  # Setze die anfängliche Lautstärke auf 50%
+volume_slider.pack(side=tk.LEFT)
+volume_frame.pack(pady=5)
+
 
 # creating a reconnect button
 reconnect_button = ttk.Button(root, text="Reconnect", command=reconnect)
